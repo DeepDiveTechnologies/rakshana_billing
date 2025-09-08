@@ -1,2 +1,5 @@
-# No external dependencies required
-# The application uses only Python standard library modules
+# Database support
+psycopg2-binary==2.9.7
+
+# No other external dependencies required
+# The application uses Python standard library modules

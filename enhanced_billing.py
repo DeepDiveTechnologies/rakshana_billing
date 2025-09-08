@@ -11,48 +11,83 @@ import os
 
 class BillingDatabase:
     def __init__(self):
-        self.db_path = 'billing_records.db'
+        self.db_url = os.environ.get('DATABASE_URL')
+        self.use_postgres = bool(self.db_url)
         self.init_database()
     
+    def get_connection(self):
+        if self.use_postgres:
+            import psycopg2
+            return psycopg2.connect(self.db_url)
+        else:
+            return sqlite3.connect('billing_records.db')
+    
     def init_database(self):
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
         
-        # Create bills table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS bills (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                bill_no TEXT UNIQUE,
-                date TEXT,
-                customer_name TEXT,
-                customer_phone TEXT,
-                customer_address TEXT,
-                subtotal REAL,
-                cgst REAL,
-                sgst REAL,
-                total_amount REAL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        # Create bill_items table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS bill_items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                bill_no TEXT,
-                product_name TEXT,
-                quantity INTEGER,
-                unit_price REAL,
-                total_price REAL,
-                FOREIGN KEY (bill_no) REFERENCES bills (bill_no)
-            )
-        ''')
+        if self.use_postgres:
+            # PostgreSQL schema
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS bills (
+                    id SERIAL PRIMARY KEY,
+                    bill_no VARCHAR(50) UNIQUE,
+                    date TIMESTAMP,
+                    customer_name VARCHAR(255),
+                    customer_phone VARCHAR(20),
+                    customer_address TEXT,
+                    subtotal DECIMAL(10,2),
+                    cgst DECIMAL(10,2),
+                    sgst DECIMAL(10,2),
+                    total_amount DECIMAL(10,2),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS bill_items (
+                    id SERIAL PRIMARY KEY,
+                    bill_no VARCHAR(50),
+                    product_name VARCHAR(255),
+                    quantity INTEGER,
+                    unit_price DECIMAL(10,2),
+                    total_price DECIMAL(10,2),
+                    FOREIGN KEY (bill_no) REFERENCES bills (bill_no)
+                )
+            ''')
+        else:
+            # SQLite schema (existing)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS bills (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    bill_no TEXT UNIQUE,
+                    date TEXT,
+                    customer_name TEXT,
+                    customer_phone TEXT,
+                    customer_address TEXT,
+                    subtotal REAL,
+                    cgst REAL,
+                    sgst REAL,
+                    total_amount REAL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS bill_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    bill_no TEXT,
+                    product_name TEXT,
+                    quantity INTEGER,
+                    unit_price REAL,
+                    total_price REAL,
+                    FOREIGN KEY (bill_no) REFERENCES bills (bill_no)
+                )
+            ''')
         
         conn.commit()
         conn.close()
     
     def save_bill(self, bill_data, items):
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
         
         try:
@@ -87,7 +122,7 @@ class BillingDatabase:
             conn.close()
     
     def get_bills(self, limit=50):
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
         
         cursor.execute('''
