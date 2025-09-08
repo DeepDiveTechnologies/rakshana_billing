@@ -600,27 +600,30 @@ Visit: rakshanacrackers.com
         }
         
         async function loadCart() {
-            const response = await fetch('/api/cart');
-            cart = await response.json();
-            
-            // Update cart counter
-            document.getElementById('cartCount').textContent = cart.length;
-            
-            const cartDiv = document.getElementById('cart');
-            const gstDiv = document.getElementById('gstSummary');
-            
-            if (cart.length === 0) {
-                cartDiv.innerHTML = '<p style="color: #666; font-style: italic;">Cart is empty - Add items to get started!</p>';
-                gstDiv.innerHTML = '';
-                return;
-            }
-            
-            let subtotal = 0;
-            let totalCGST = 0;
-            let totalSGST = 0;
-            let html = '';
-            
-            cart.forEach((item, index) => {
+            try {
+                const response = await fetch('/api/cart');
+                cart = await response.json();
+                
+                // Update cart counter
+                document.getElementById('cartCount').textContent = cart.length;
+                
+                const cartDiv = document.getElementById('cart');
+                const gstDiv = document.getElementById('gstSummary');
+                
+                if (cart.length === 0) {
+                    cartDiv.innerHTML = '<p style="color: #666; font-style: italic;">Cart is empty - Add items to get started!</p>';
+                    gstDiv.innerHTML = '';
+                    // Also clear any bill display
+                    document.getElementById('billSection').style.display = 'none';
+                    return;
+                }
+                
+                let subtotal = 0;
+                let totalCGST = 0;
+                let totalSGST = 0;
+                let html = '';
+                
+                cart.forEach((item, index) => {
                 const itemTotal = item.price * item.qty;
                 subtotal += itemTotal;
                 
@@ -718,10 +721,27 @@ Visit: rakshanacrackers.com
             }
             
             if (confirm('Are you sure you want to clear the cart?')) {
-                await fetch('/api/clear-cart', {method: 'POST'});
-                loadCart();
-                document.getElementById('billSection').style.display = 'none';
-                alert('Cart cleared successfully!');
+                try {
+                    const response = await fetch('/api/clear-cart', {method: 'POST'});
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Clear client-side cart
+                        cart = [];
+                        console.log('Cart cleared on client side:', cart);
+                        // Reload cart display
+                        await loadCart();
+                        console.log('Cart reloaded from server:', cart);
+                        // Hide bill section
+                        document.getElementById('billSection').style.display = 'none';
+                        alert('Cart cleared successfully!');
+                    } else {
+                        alert('Failed to clear cart. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Error clearing cart:', error);
+                    alert('Error clearing cart. Please refresh the page.');
+                }
             }
         }
         
