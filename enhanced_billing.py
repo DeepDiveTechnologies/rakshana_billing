@@ -17,8 +17,14 @@ class BillingDatabase:
     
     def get_connection(self):
         if self.use_postgres:
-            import psycopg2
-            return psycopg2.connect(self.db_url)
+            try:
+                import psycopg2
+                return psycopg2.connect(self.db_url)
+            except ImportError as e:
+                print(f"PostgreSQL not available: {e}")
+                print("Falling back to SQLite...")
+                self.use_postgres = False
+                return sqlite3.connect('billing_records.db')
         else:
             return sqlite3.connect('billing_records.db')
     

@@ -1,5 +1,5 @@
-# Database support
-psycopg2-binary==2.9.7
+# Database support - Python 3.13 compatible
+psycopg2-binary>=2.9.9
 
 # No other external dependencies required
 # The application uses Python standard library modules
