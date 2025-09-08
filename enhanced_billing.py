@@ -716,32 +716,25 @@ Visit: rakshanacrackers.com
         
         async function clearCart() {
             if (cart.length === 0) {
-                alert('Cart is already empty!');
                 return;
             }
             
-            if (confirm('Are you sure you want to clear the cart?')) {
-                try {
-                    const response = await fetch('/api/clear-cart', {method: 'POST'});
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        // Clear client-side cart
-                        cart = [];
-                        console.log('Cart cleared on client side:', cart);
-                        // Reload cart display
-                        await loadCart();
-                        console.log('Cart reloaded from server:', cart);
-                        // Hide bill section
-                        document.getElementById('billSection').style.display = 'none';
-                        alert('Cart cleared successfully!');
-                    } else {
-                        alert('Failed to clear cart. Please try again.');
-                    }
-                } catch (error) {
-                    console.error('Error clearing cart:', error);
-                    alert('Error clearing cart. Please refresh the page.');
+            try {
+                const response = await fetch('/api/clear-cart', {method: 'POST'});
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Clear client-side cart
+                    cart = [];
+                    console.log('Cart cleared on client side:', cart);
+                    // Reload cart display
+                    await loadCart();
+                    console.log('Cart reloaded from server:', cart);
+                    // Hide bill section
+                    document.getElementById('billSection').style.display = 'none';
                 }
+            } catch (error) {
+                console.error('Error clearing cart:', error);
             }
         }
         
