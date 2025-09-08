@@ -568,10 +568,11 @@ Visit: rohinipyropark.com
 </html>'''
 
 def run_server():
-    server = HTTPServer(('localhost', 8080), CrackerBillingHandler)
+    port = int(os.environ.get('PORT', 8080))
+    server = HTTPServer(('0.0.0.0', port), CrackerBillingHandler)
     print("*** ROHINI PYRO PARK GST BILLING SYSTEM ***")
     print("Features: GST Calculation + Database Storage")
-    print("URL: http://localhost:8080")
+    print(f"Server running on port {port}")
     print("Press Ctrl+C to stop")
     
     try:

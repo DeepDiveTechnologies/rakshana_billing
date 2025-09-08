@@ -1,7 +1,2 @@
 # No external dependencies required
-# The application uses only Python standard library modules:
-# - http.server
-# - json  
-# - datetime
-# - sqlite3
-# - os
+# The application uses only Python standard library modules

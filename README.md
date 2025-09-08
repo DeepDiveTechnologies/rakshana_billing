@@ -9,7 +9,7 @@ Enhanced billing application for cracker shops with GST calculations and databas
 - Bill generation and printing
 - Customer management
 
-## Setup
+## Local Setup
 ```bash
 # Create virtual environment
 python3 -m venv venv
@@ -19,7 +19,15 @@ source venv/bin/activate
 python enhanced_billing.py
 ```
 
+## Render Deployment
+1. Connect your GitHub repository to Render
+2. Create a new Web Service
+3. Use these settings:
+   - **Build Command**: `pip install -r requirements.txt` (optional, no deps needed)
+   - **Start Command**: `python enhanced_billing.py`
+   - **Environment**: Python 3
+
 ## Usage
 1. Start the application
-2. Open browser to `http://localhost:8000`
+2. Open browser to the provided URL
 3. Create bills and manage inventory
