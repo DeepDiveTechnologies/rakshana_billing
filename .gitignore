@@ -6,7 +6,8 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Database files are now included
+# Database files (auto-created by application)
+*.db
 
 # Generated bills (optional - remove this line if you want to include bills)
 bill_*.txt
