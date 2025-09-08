@@ -1,0 +1,13 @@
+# Virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Database files (optional - remove this line if you want to include the database)
+*.db
+
+# Generated bills (optional - remove this line if you want to include bills)
+bill_*.txt
