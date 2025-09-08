@@ -200,6 +200,7 @@ class CrackerBillingHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(self.get_html().encode())
         elif self.path == '/api/inventory':
+            print(f"Inventory request - sending {len(self.inventory)} items")
             self.send_json(self.inventory)
         elif self.path == '/api/cart':
             self.send_json(self.__class__.cart)
@@ -562,9 +563,23 @@ Visit: rakshanacrackers.com
         
         async function loadInventory() {
             try {
+                console.log('Loading inventory...');
                 const response = await fetch('/api/inventory');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 inventory = await response.json();
+                console.log('Inventory loaded:', inventory);
+                console.log('Number of items:', Object.keys(inventory).length);
+                
                 const select = document.getElementById('product');
+                if (!select) {
+                    console.error('Product select element not found!');
+                    return;
+                }
                 
                 // Clear existing options first
                 select.innerHTML = '<option value="">Select a product...</option>';
@@ -574,8 +589,9 @@ Visit: rakshanacrackers.com
                     option.value = product;
                     option.textContent = `${product} - Rs.${details.price} (GST: ${details.gst}%)`;
                     select.appendChild(option);
+                    console.log('Added option:', product);
                 }
-                console.log('Loaded', Object.keys(inventory).length, 'products');
+                console.log('Loaded', Object.keys(inventory).length, 'products to dropdown');
             } catch (error) {
                 console.error('Error loading inventory:', error);
             }
