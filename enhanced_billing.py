@@ -561,15 +561,23 @@ Visit: rakshanacrackers.com
         }
         
         async function loadInventory() {
-            const response = await fetch('/api/inventory');
-            inventory = await response.json();
-            const select = document.getElementById('product');
-            
-            for (const [product, details] of Object.entries(inventory)) {
-                const option = document.createElement('option');
-                option.value = product;
-                option.textContent = `${product} - Rs.${details.price} (GST: ${details.gst}%)`;
-                select.appendChild(option);
+            try {
+                const response = await fetch('/api/inventory');
+                inventory = await response.json();
+                const select = document.getElementById('product');
+                
+                // Clear existing options first
+                select.innerHTML = '<option value="">Select a product...</option>';
+                
+                for (const [product, details] of Object.entries(inventory)) {
+                    const option = document.createElement('option');
+                    option.value = product;
+                    option.textContent = `${product} - Rs.${details.price} (GST: ${details.gst}%)`;
+                    select.appendChild(option);
+                }
+                console.log('Loaded', Object.keys(inventory).length, 'products');
+            } catch (error) {
+                console.error('Error loading inventory:', error);
             }
         }
         
@@ -715,27 +723,14 @@ Visit: rakshanacrackers.com
         }
         
         async function clearCart() {
-            if (cart.length === 0) {
-                return;
-            }
+            // Only clear the visual display, not the actual cart data
+            const cartDiv = document.getElementById('cart');
+            const gstDiv = document.getElementById('gstSummary');
             
-            try {
-                const response = await fetch('/api/clear-cart', {method: 'POST'});
-                const result = await response.json();
-                
-                if (result.success) {
-                    // Clear client-side cart
-                    cart = [];
-                    console.log('Cart cleared on client side:', cart);
-                    // Reload cart display
-                    await loadCart();
-                    console.log('Cart reloaded from server:', cart);
-                    // Hide bill section
-                    document.getElementById('billSection').style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Error clearing cart:', error);
-            }
+            cartDiv.innerHTML = '<p style="color: #666; font-style: italic;">Cart display cleared - Add items to refresh</p>';
+            gstDiv.innerHTML = '';
+            document.getElementById('cartCount').textContent = '0';
+            document.getElementById('billSection').style.display = 'none';
         }
         
         async function loadBillHistory() {
