@@ -184,6 +184,45 @@ class CrackerBillingHandler(BaseHTTPRequestHandler):
         elif self.path == '/api/bills':
             bills = self.db.get_bills()
             self.send_json(bills)
+        elif self.path == '/admin/database':
+            # Simple database viewer
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            
+            try:
+                conn = self.db.get_connection()
+                cursor = conn.cursor()
+                
+                # Get bills count
+                cursor.execute('SELECT COUNT(*) FROM bills')
+                bill_count = cursor.fetchone()[0]
+                
+                # Get recent bills
+                cursor.execute('SELECT bill_no, date, customer_name, total_amount FROM bills ORDER BY created_at DESC LIMIT 10')
+                bills = cursor.fetchall()
+                
+                html = f'''
+                <html><head><title>Database Viewer</title></head>
+                <body style="font-family: Arial; padding: 20px;">
+                <h2>Rakshana Crackers - Database Status</h2>
+                <p><strong>Total Bills:</strong> {bill_count}</p>
+                <p><strong>Database Type:</strong> {"PostgreSQL" if self.db.use_postgres else "SQLite"}</p>
+                <h3>Recent Bills:</h3>
+                <table border="1" style="border-collapse: collapse; width: 100%;">
+                <tr><th>Bill No</th><th>Date</th><th>Customer</th><th>Amount</th></tr>
+                '''
+                
+                for bill in bills:
+                    html += f'<tr><td>{bill[0]}</td><td>{bill[1]}</td><td>{bill[2]}</td><td>₹{bill[3]}</td></tr>'
+                
+                html += '</table><br><a href="/">← Back to Billing</a></body></html>'
+                self.wfile.write(html.encode())
+                conn.close()
+                
+            except Exception as e:
+                error_html = f'<html><body><h2>Database Error</h2><p>{str(e)}</p><a href="/">← Back</a></body></html>'
+                self.wfile.write(error_html.encode())
         elif self.path.startswith('/download/'):
             # Download bill file
             filename = self.path.split('/')[-1]
