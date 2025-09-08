@@ -216,7 +216,7 @@ class CrackerBillingHandler(BaseHTTPRequestHandler):
         total_amount = subtotal + total_cgst + total_sgst
         
         bill_text = f"""========================================
-        ROHINI PYRO PARK
+        RAKSHANA CRACKERS
      CRACKER SHOP BILLING SYSTEM
 ========================================
 Bill No: {bill_no}
@@ -242,7 +242,7 @@ SGST @ 9%:                   Rs.{total_sgst:>8.2f}
 TOTAL AMOUNT:                Rs.{total_amount:>8.2f}
 ----------------------------------------
 Thank you for shopping with us!
-Visit: rohinipyropark.com
+Visit: rakshanacrackers.com
 ========================================"""
         
         bill_data = {
@@ -270,7 +270,7 @@ Visit: rohinipyropark.com
         return '''<!DOCTYPE html>
 <html>
 <head>
-    <title>Rohini Pyro Park - GST Billing System</title>
+    <title>Rakshana Crackers - GST Billing System</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -339,7 +339,7 @@ Visit: rohinipyropark.com
 <body>
     <div class="container">
         <div class="header">
-            <h1>ROHINI PYRO PARK</h1>
+            <h1>RAKSHANA CRACKERS</h1>
             <p>GST Enabled Fireworks Billing System</p>
         </div>
         
@@ -589,7 +589,7 @@ Visit: rohinipyropark.com
 def run_server():
     port = int(os.environ.get('PORT', 8080))
     server = HTTPServer(('0.0.0.0', port), CrackerBillingHandler)
-    print("*** ROHINI PYRO PARK GST BILLING SYSTEM ***")
+    print("*** RAKSHANA CRACKERS GST BILLING SYSTEM ***")
     print("Features: GST Calculation + Database Storage")
     print(f"Server running on port {port}")
     print("Press Ctrl+C to stop")
