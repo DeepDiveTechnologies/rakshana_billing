@@ -168,7 +168,10 @@ class CrackerBillingHandler(BaseHTTPRequestHandler):
         "Safety Matches": {"price": 5, "gst": 5}
     }
     
-    cart = []
+    def __init__(self, *args, **kwargs):
+        self.cart = []
+        super().__init__(*args, **kwargs)
+    
     db = BillingDatabase()
     
     def do_GET(self):
@@ -499,7 +502,7 @@ Visit: rakshanacrackers.com
                 
                 <div class="right-panel">
                     <div class="section">
-                        <h3>Shopping Cart</h3>
+                        <h3>Shopping Cart (<span id="cartCount">0</span> items)</h3>
                         <div id="cart"></div>
                         <div id="gstSummary"></div>
                         <button onclick="generateBill()">Generate GST Bill</button>
@@ -581,11 +584,14 @@ Visit: rakshanacrackers.com
             const response = await fetch('/api/cart');
             cart = await response.json();
             
+            // Update cart counter
+            document.getElementById('cartCount').textContent = cart.length;
+            
             const cartDiv = document.getElementById('cart');
             const gstDiv = document.getElementById('gstSummary');
             
             if (cart.length === 0) {
-                cartDiv.innerHTML = '<p>Cart is empty</p>';
+                cartDiv.innerHTML = '<p style="color: #666; font-style: italic;">Cart is empty - Add items to get started!</p>';
                 gstDiv.innerHTML = '';
                 return;
             }
@@ -611,7 +617,7 @@ Visit: rakshanacrackers.com
                     </div>
                     <div>
                         <strong>Rs.${itemTotal.toFixed(2)}</strong>
-                        <button onclick="removeItem(${index})" style="background: #f44336; padding: 5px;">×</button>
+                        <button onclick="removeItem(${index})" style="background: #f44336; padding: 5px 8px; margin-left: 10px; border-radius: 4px; color: white; border: none; cursor: pointer;">Remove</button>
                     </div>
                 </div>`;
             });
@@ -687,9 +693,17 @@ Visit: rakshanacrackers.com
         }
         
         async function clearCart() {
-            await fetch('/api/clear-cart', {method: 'POST'});
-            loadCart();
-            document.getElementById('billSection').style.display = 'none';
+            if (cart.length === 0) {
+                alert('Cart is already empty!');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to clear the cart?')) {
+                await fetch('/api/clear-cart', {method: 'POST'});
+                loadCart();
+                document.getElementById('billSection').style.display = 'none';
+                alert('Cart cleared successfully!');
+            }
         }
         
         async function loadBillHistory() {
