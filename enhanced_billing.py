@@ -168,8 +168,10 @@ class CrackerBillingHandler(BaseHTTPRequestHandler):
         "Safety Matches": {"price": 5, "gst": 5}
     }
     
+    # Shared cart across all requests
+    cart = []
+    
     def __init__(self, *args, **kwargs):
-        self.cart = []
         super().__init__(*args, **kwargs)
     
     db = BillingDatabase()
@@ -183,7 +185,7 @@ class CrackerBillingHandler(BaseHTTPRequestHandler):
         elif self.path == '/api/inventory':
             self.send_json(self.inventory)
         elif self.path == '/api/cart':
-            self.send_json(self.cart)
+            self.send_json(self.__class__.cart)
         elif self.path == '/api/bills':
             bills = self.db.get_bills()
             self.send_json(bills)
@@ -267,19 +269,19 @@ class CrackerBillingHandler(BaseHTTPRequestHandler):
             return
         
         if self.path == '/api/add-item':
-            self.cart.append(data)
+            self.__class__.cart.append(data)
             self.send_json({"success": True})
         elif self.path == '/api/generate-bill':
             bill_text, bill_data = self.generate_bill(data)
             filename = self.save_bill_file(bill_text)
-            success = self.db.save_bill(bill_data, self.cart)
+            success = self.db.save_bill(bill_data, self.__class__.cart)
             self.send_json({"bill": bill_text, "filename": filename, "saved": success})
         elif self.path == '/api/clear-cart':
-            self.cart = []
+            self.__class__.cart = []
             self.send_json({"success": True})
         elif self.path == '/api/remove-item':
-            if 0 <= data['index'] < len(self.cart):
-                self.cart.pop(data['index'])
+            if 0 <= data['index'] < len(self.__class__.cart):
+                self.__class__.cart.pop(data['index'])
             self.send_json({"success": True})
     
     def send_json(self, data):
@@ -301,7 +303,7 @@ class CrackerBillingHandler(BaseHTTPRequestHandler):
         total_sgst = 0
         
         # Calculate totals
-        for item in self.cart:
+        for item in self.__class__.cart:
             item_total = item["price"] * item["qty"]
             subtotal += item_total
             
@@ -328,7 +330,7 @@ ITEM                QTY  RATE    AMOUNT
 ----------------------------------------
 """
         
-        for item in self.cart:
+        for item in self.__class__.cart:
             item_total = item["price"] * item["qty"]
             bill_text += f"{item['product'][:15]:<15} {item['qty']:>3} {item['price']:>5} {item_total:>8.2f}\n"
         
