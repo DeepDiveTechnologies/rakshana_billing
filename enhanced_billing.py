@@ -13,19 +13,36 @@ class BillingDatabase:
     def __init__(self):
         self.db_url = os.environ.get('DATABASE_URL')
         self.use_postgres = bool(self.db_url)
+        
+        print(f"Database URL present: {bool(self.db_url)}")
+        if self.db_url:
+            print(f"Database URL format: {self.db_url[:20]}...")
+        
         self.init_database()
     
     def get_connection(self):
         if self.use_postgres:
             try:
                 import psycopg2
-                return psycopg2.connect(self.db_url)
-            except ImportError as e:
-                print(f"PostgreSQL not available: {e}")
+                # Handle different URL formats
+                db_url = self.db_url
+                if db_url and not db_url.startswith('postgresql://'):
+                    # If it's just the host, construct proper URL
+                    if '=' not in db_url and 'postgresql://' not in db_url:
+                        print(f"Invalid DATABASE_URL format: {db_url}")
+                        print("Falling back to SQLite...")
+                        self.use_postgres = False
+                        return sqlite3.connect('billing_records.db')
+                
+                print("Connecting to PostgreSQL...")
+                return psycopg2.connect(db_url)
+            except (ImportError, Exception) as e:
+                print(f"PostgreSQL connection failed: {e}")
                 print("Falling back to SQLite...")
                 self.use_postgres = False
                 return sqlite3.connect('billing_records.db')
         else:
+            print("Using SQLite database...")
             return sqlite3.connect('billing_records.db')
     
     def init_database(self):
