@@ -184,6 +184,21 @@ class CrackerBillingHandler(BaseHTTPRequestHandler):
         elif self.path == '/api/bills':
             bills = self.db.get_bills()
             self.send_json(bills)
+        elif self.path.startswith('/download/'):
+            # Download bill file
+            filename = self.path.split('/')[-1]
+            try:
+                with open(filename, 'r') as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header('Content-type', 'text/plain')
+                self.send_header('Content-Disposition', f'attachment; filename="{filename}"')
+                self.end_headers()
+                self.wfile.write(content.encode())
+            except FileNotFoundError:
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write(b'File not found')
     
     def do_POST(self):
         try:
@@ -301,10 +316,39 @@ Visit: rakshanacrackers.com
         return bill_text, bill_data
     
     def save_bill_file(self, bill):
+        import platform
+        import pathlib
+        
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f"bill_RPP_{timestamp}.txt"
+        
+        # Save locally (for server)
         with open(filename, 'w') as f:
             f.write(bill)
+        
+        # Create desktop rakshana folder path
+        try:
+            system = platform.system()
+            if system == "Windows":
+                desktop = pathlib.Path.home() / "Desktop" / "rakshana"
+            elif system == "Darwin":  # macOS
+                desktop = pathlib.Path.home() / "Desktop" / "rakshana"
+            else:  # Linux
+                desktop = pathlib.Path.home() / "Desktop" / "rakshana"
+            
+            # Create directory if it doesn't exist
+            desktop.mkdir(parents=True, exist_ok=True)
+            
+            # Save bill to desktop folder
+            desktop_file = desktop / filename
+            with open(desktop_file, 'w') as f:
+                f.write(bill)
+            
+            print(f"Bill saved to: {desktop_file}")
+            
+        except Exception as e:
+            print(f"Could not save to desktop: {e}")
+        
         return filename
     
     def get_html(self):
@@ -578,10 +622,23 @@ Visit: rakshanacrackers.com
             document.getElementById('bill').textContent = result.bill;
             document.getElementById('billSection').style.display = 'block';
             
+            // Add download button
+            const downloadBtn = document.createElement('button');
+            downloadBtn.textContent = 'Download Bill';
+            downloadBtn.style.marginTop = '10px';
+            downloadBtn.onclick = () => {
+                window.open(`/download/${result.filename}`, '_blank');
+            };
+            
+            const billSection = document.getElementById('billSection');
+            const existingBtn = billSection.querySelector('button');
+            if (existingBtn) existingBtn.remove();
+            billSection.appendChild(downloadBtn);
+            
             if (result.saved) {
-                alert(`GST Bill generated and saved as ${result.filename}\\nBill record saved to database`);
+                alert(`GST Bill generated and saved as ${result.filename}\\nBill saved to desktop/rakshana folder\\nBill record saved to database`);
             } else {
-                alert(`Bill generated as ${result.filename}\\nWarning: Could not save to database`);
+                alert(`Bill generated as ${result.filename}\\nBill saved to desktop/rakshana folder\\nWarning: Could not save to database`);
             }
             
             clearCart();
