@@ -145,9 +145,28 @@ class CrackerBillingHandler(BaseHTTPRequestHandler):
             self.send_json(bills)
     
     def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
-        post_data = self.rfile.read(content_length)
-        data = json.loads(post_data.decode())
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            if content_length == 0:
+                self.send_json({"error": "No data received"})
+                return
+                
+            post_data = self.rfile.read(content_length)
+            if not post_data:
+                self.send_json({"error": "Empty request body"})
+                return
+                
+            try:
+                data = json.loads(post_data.decode('utf-8'))
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+                print(f"Raw data: {post_data}")
+                self.send_json({"error": "Invalid JSON data"})
+                return
+        except Exception as e:
+            print(f"POST request error: {e}")
+            self.send_json({"error": "Request processing failed"})
+            return
         
         if self.path == '/api/add-item':
             self.cart.append(data)
